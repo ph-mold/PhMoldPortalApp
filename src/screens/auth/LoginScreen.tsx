@@ -15,7 +15,11 @@ import { authApi } from '../../services/api/authApi';
 import { authStorage } from '../../services/storage/authStorage';
 import { cookieManager } from '../../services/storage/cookieManager';
 
-const LoginScreen = () => {
+interface LoginScreenProps {
+  onLoginSuccess?: (token: string) => void;
+}
+
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -37,15 +41,19 @@ const LoginScreen = () => {
       await authStorage.setAccessToken(response.accessToken);
       if (response.refreshToken) {
         await authStorage.setRefreshToken(response.refreshToken);
-        // 리프레시 토큰을 쿠키로도 설정 (웹뷰에서 사용)
         await cookieManager.setRefreshTokenCookie(response.refreshToken);
       }
       if (response.user) {
         await authStorage.setUserInfo(response.user);
       }
 
-      // 로그인 성공 시 메인 화면으로 이동
-      navigation.navigate('Main' as never);
+      // App.tsx에서 토큰 상태 갱신
+      if (onLoginSuccess) {
+        onLoginSuccess(response.accessToken);
+      } else {
+        // fallback: 기존 네비게이션
+        navigation.navigate('Main' as never);
+      }
     } catch (error: any) {
       console.error('로그인 에러 상세:', {
         message: error.message,
