@@ -1,25 +1,43 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import 'react-native-gesture-handler';
 
-import { SafeAreaView, View } from 'react-native';
-import { WebView } from 'react-native-webview';
+import LoginScreen from './src/screens/auth/LoginScreen';
+import MainScreen from './src/screens/main/MainScreen';
+
+const Stack = createStackNavigator();
 
 function App() {
   return (
-    <View style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <WebView
-          source={{ uri: 'http://portal.phmold.co.kr' }}
-          style={{ flex: 1 }}
-          sharedCookiesEnabled={true}
-          thirdPartyCookiesEnabled={true}
-        />
-      </SafeAreaView>
-    </View>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName="Login"
+          screenOptions={{
+            headerShown: false,
+            gestureEnabled: false, // 스와이프 뒤로가기 비활성화
+          }}
+        >
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{
+              gestureEnabled: false,
+            }}
+          />
+          <Stack.Screen
+            name="Main"
+            component={MainScreen}
+            options={{
+              gestureEnabled: false,
+              headerLeft: () => null, // 헤더 뒤로가기 버튼 제거
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
 
