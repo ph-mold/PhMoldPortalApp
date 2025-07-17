@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { authStorage } from '../../services/storage/authStorage';
 import { Building, Home, Menu, User } from 'lucide-react-native';
 import MenuScreen from './MenuScreen';
 import HomeScreen from './HomeScreen';
@@ -10,19 +9,6 @@ import UserScreen from './UserScreen';
 const Tab = createBottomTabNavigator();
 
 export default function MainNavigator() {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      const token = await authStorage.getAccessToken();
-      setAccessToken(token);
-      setIsLoading(false);
-    })();
-  }, []);
-
-  if (isLoading) return null;
-
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -37,22 +23,10 @@ export default function MainNavigator() {
         },
       })}
     >
-      <Tab.Screen
-        name="메뉴"
-        children={() => <MenuScreen accessToken={accessToken} />}
-      />
-      <Tab.Screen
-        name="홈"
-        children={() => <HomeScreen accessToken={accessToken} />}
-      />
-      <Tab.Screen
-        name="ERP"
-        children={() => <ErpScreen accessToken={accessToken} />}
-      />
-      <Tab.Screen
-        name="유저"
-        children={() => <UserScreen accessToken={accessToken} />}
-      />
+      <Tab.Screen name="메뉴" component={MenuScreen} />
+      <Tab.Screen name="홈" component={HomeScreen} />
+      <Tab.Screen name="ERP" component={ErpScreen} />
+      <Tab.Screen name="유저" component={UserScreen} />
     </Tab.Navigator>
   );
 }

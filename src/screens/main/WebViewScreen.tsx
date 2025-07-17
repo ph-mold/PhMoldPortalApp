@@ -2,32 +2,58 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
-import { getAuthBridgeScript } from '../../services/webview/authBridge';
+import { cookieManager } from '../../services/storage/cookieManager';
 
 interface WebViewScreenProps {
   url: string;
-  accessToken: string | null;
 }
 
-const WebViewScreen: React.FC<WebViewScreenProps> = ({ url, accessToken }) => {
+const WebViewScreen: React.FC<WebViewScreenProps> = ({ url }) => {
   const navigation = useNavigation();
   const webViewRef = useRef<WebView>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [cookieScript, setCookieScript] = useState<string>('');
 
   useEffect(() => {
-    if (!accessToken) {
+    // 쿠키 스크립트 생성
+    const generateCookieScript = async () => {
+      try {
+        const script = await cookieManager.getCookieScript();
+        console.log('생성된 쿠키 스크립트:', script);
+        setCookieScript(script);
+
+        // 쿠키 디버깅
+        await cookieManager.logCookies();
+      } catch (error) {
+        console.error('쿠키 스크립트 생성 실패:', error);
+        setCookieScript('true;');
+      }
+    };
+
+    generateCookieScript();
+  }, []);
+
+  const handleLoadEnd = () => {
+    console.log('웹뷰 로딩 완료');
+    setIsLoading(false);
+  };
+
+  const handleError = (syntheticEvent: any) => {
+    const { nativeEvent } = syntheticEvent;
+    console.warn('WebView error:', nativeEvent);
+
+    // 401 에러나 인증 관련 에러인 경우 로그인 화면으로 이동
+    if (nativeEvent.url && nativeEvent.url.includes('login')) {
       navigation.reset({
         index: 0,
         routes: [{ name: 'Login' as never }],
       });
     }
-  }, [accessToken, navigation]);
+  };
 
-  if (!accessToken) {
-    return null;
-  }
-
-  const injectedJavaScript = getAuthBridgeScript(accessToken);
+  const handleMessage = (event: any) => {
+    console.log('WebView 메시지:', event.nativeEvent.data);
+  };
 
   return (
     <>
@@ -40,10 +66,21 @@ const WebViewScreen: React.FC<WebViewScreenProps> = ({ url, accessToken }) => {
         startInLoadingState={true}
         javaScriptEnabled={true}
         domStorageEnabled={true}
-        injectedJavaScript={injectedJavaScript}
-        onLoadEnd={() => setIsLoading(false)}
-        onMessage={() => {
-          // 필요시 메시지 처리
+        injectedJavaScript={cookieScript}
+        onLoadEnd={handleLoadEnd}
+        onError={handleError}
+        onMessage={handleMessage}
+        onHttpError={syntheticEvent => {
+          const { nativeEvent } = syntheticEvent;
+          console.warn('WebView HTTP error:', nativeEvent);
+
+          // 401 에러인 경우 로그인 화면으로 이동
+          if (nativeEvent.statusCode === 401) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' as never }],
+            });
+          }
         }}
       />
       {isLoading && (

@@ -1,24 +1,41 @@
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { cookieManager } from '../storage/cookieManager';
 
 const API_BASE_URL = 'http://api.phmold.co.kr';
 
-// axios 인스턴스 생성
+// axios 인스턴스 생성 - 쿠키 기반 인증
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // 쿠키 자동 전송
 });
 
-// 요청 인터셉터 - 토큰 자동 추가
+// 요청 인터셉터 - 저장된 쿠키를 헤더에 추가
 apiClient.interceptors.request.use(
   async config => {
-    const token = await AsyncStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+      // 저장된 쿠키들을 가져와서 Cookie 헤더에 설정
+      const keys = await cookieManager.getAllCookieKeys();
+      const cookieStrings: string[] = [];
+
+      for (const key of keys) {
+        const value = await cookieManager.getCookie(key);
+        if (value) {
+          cookieStrings.push(`${key}=${value}`);
+        }
+      }
+
+      if (cookieStrings.length > 0) {
+        config.headers.Cookie = cookieStrings.join('; ');
+        console.log('요청에 쿠키 추가:', config.headers.Cookie);
+      }
+    } catch (error) {
+      console.error('쿠키 설정 중 오류:', error);
     }
+
     return config;
   },
   error => {
@@ -26,17 +43,13 @@ apiClient.interceptors.request.use(
   },
 );
 
-// 응답 인터셉터 - 토큰 만료 처리
+// 응답 인터셉터 - 401 에러 처리
 apiClient.interceptors.response.use(
   response => {
     return response;
   },
-  async error => {
-    if (error.response?.status === 401) {
-      // 토큰 만료 시 로그아웃 처리
-      await AsyncStorage.removeItem('accessToken');
-      // TODO: 로그인 화면으로 리다이렉트
-    }
+  error => {
+    // 401 에러는 각 API에서 개별적으로 처리
     return Promise.reject(error);
   },
 );

@@ -4,10 +4,8 @@ export interface ILoginBody {
   password: string;
 }
 
-// 로그인 응답 데이터
+// 로그인 응답 데이터 (쿠키 기반)
 export interface ILoginData {
-  accessToken: string;
-  refreshToken?: string;
   user?: {
     id: string;
     email: string;
