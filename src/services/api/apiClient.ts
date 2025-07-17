@@ -1,11 +1,11 @@
 import axios from 'axios';
 import { cookieManager } from '../storage/cookieManager';
-
-const API_BASE_URL = 'http://api.phmold.co.kr';
+import Config from 'react-native-config';
+const API_URL = Config.API_URL || 'http://api.phmold.co.kr';
 
 // axios 인스턴스 생성 - 쿠키 기반 인증
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
