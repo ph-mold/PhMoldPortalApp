@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { authStorage } from '../../services/storage/authStorage';
-import WebViewScreen from './WebViewScreen';
 import { Building, Home, Menu, User } from 'lucide-react-native';
+import MenuScreen from './MenuScreen';
+import HomeScreen from './HomeScreen';
+import ErpScreen from './ErpScreen';
+import UserScreen from './UserScreen';
 
 const Tab = createBottomTabNavigator();
-
-const WEB_URLS = {
-  menu: 'http://portal.phmold.co.kr/',
-  home: 'http://portal.phmold.co.kr/',
-  erp: 'http://portal.phmold.co.kr/#/erp',
-  user: 'http://portal.phmold.co.kr/#/user',
-};
 
 export default function MainNavigator() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -43,27 +39,19 @@ export default function MainNavigator() {
     >
       <Tab.Screen
         name="메뉴"
-        children={() => (
-          <WebViewScreen url={WEB_URLS.menu} accessToken={accessToken} />
-        )}
+        children={() => <MenuScreen accessToken={accessToken} />}
       />
       <Tab.Screen
         name="홈"
-        children={() => (
-          <WebViewScreen url={WEB_URLS.home} accessToken={accessToken} />
-        )}
+        children={() => <HomeScreen accessToken={accessToken} />}
       />
       <Tab.Screen
         name="ERP"
-        children={() => (
-          <WebViewScreen url={WEB_URLS.erp} accessToken={accessToken} />
-        )}
+        children={() => <ErpScreen accessToken={accessToken} />}
       />
       <Tab.Screen
         name="유저"
-        children={() => (
-          <WebViewScreen url={WEB_URLS.user} accessToken={accessToken} />
-        )}
+        children={() => <UserScreen accessToken={accessToken} />}
       />
     </Tab.Navigator>
   );
