@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
-import { cookieManager } from '../../services/storage/cookieManager';
 
 interface WebViewScreenProps {
   url: string;
@@ -10,28 +9,7 @@ interface WebViewScreenProps {
 
 const WebViewScreen: React.FC<WebViewScreenProps> = ({ url }) => {
   const navigation = useNavigation();
-  const webViewRef = useRef<WebView>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [cookieScript, setCookieScript] = useState<string>('');
-
-  useEffect(() => {
-    // 쿠키 스크립트 생성
-    const generateCookieScript = async () => {
-      try {
-        const script = await cookieManager.getCookieScript();
-        console.log('생성된 쿠키 스크립트:', script);
-        setCookieScript(script);
-
-        // 쿠키 디버깅
-        await cookieManager.logCookies();
-      } catch (error) {
-        console.error('쿠키 스크립트 생성 실패:', error);
-        setCookieScript('true;');
-      }
-    };
-
-    generateCookieScript();
-  }, []);
 
   const handleLoadEnd = () => {
     console.log('웹뷰 로딩 완료');
@@ -58,7 +36,6 @@ const WebViewScreen: React.FC<WebViewScreenProps> = ({ url }) => {
   return (
     <>
       <WebView
-        ref={webViewRef}
         source={{ uri: url }}
         style={{ flex: 1 }}
         sharedCookiesEnabled={true}
@@ -66,7 +43,6 @@ const WebViewScreen: React.FC<WebViewScreenProps> = ({ url }) => {
         startInLoadingState={true}
         javaScriptEnabled={true}
         domStorageEnabled={true}
-        injectedJavaScript={cookieScript}
         onLoadEnd={handleLoadEnd}
         onError={handleError}
         onMessage={handleMessage}
