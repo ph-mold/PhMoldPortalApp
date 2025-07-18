@@ -41,6 +41,10 @@ const WebViewScreen: React.FC<WebViewScreenProps> = ({ url }) => {
         style={{ flex: 1 }}
         sharedCookiesEnabled={true}
         thirdPartyCookiesEnabled={true}
+        injectedJavaScript={`
+          localStorage.setItem('platform', 'app');
+          true;
+        `}
         startInLoadingState={true}
         javaScriptEnabled={true}
         domStorageEnabled={true}
