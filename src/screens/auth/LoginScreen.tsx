@@ -11,11 +11,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { authApi } from '../../services/api/authApi';
-import { authStorage } from '../../services/storage/authStorage';
-import { cookieManager } from '../../services/storage/cookieManager';
+import { AuthService } from '../../services/authService';
 
-const LoginScreen = () => {
+interface LoginScreenProps {
+  onLoginSuccess?: () => void;
+}
+
+const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const navigation = useNavigation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,32 +32,22 @@ const LoginScreen = () => {
     setIsLoading(true);
 
     try {
-      // 실제 로그인 API 호출
-      const response = await authApi.login({ email, password });
+      const result = await AuthService.login(email, password);
 
-      // 토큰과 사용자 정보 저장
-      await authStorage.setAccessToken(response.accessToken);
-      if (response.refreshToken) {
-        await authStorage.setRefreshToken(response.refreshToken);
-        // 리프레시 토큰을 쿠키로도 설정 (웹뷰에서 사용)
-        await cookieManager.setRefreshTokenCookie(response.refreshToken);
+      if (result.success) {
+        // 로그인 성공 시 콜백 호출
+        if (onLoginSuccess) {
+          onLoginSuccess();
+        } else {
+          // fallback: 기존 네비게이션
+          navigation.navigate('Main' as never);
+        }
+      } else {
+        Alert.alert('로그인 실패', result.error || '로그인에 실패했습니다.');
       }
-      if (response.user) {
-        await authStorage.setUserInfo(response.user);
-      }
-
-      // 로그인 성공 시 메인 화면으로 이동
-      navigation.navigate('Main' as never);
     } catch (error: any) {
-      console.error('로그인 에러 상세:', {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        config: error.config,
-      });
-      const errorMessage =
-        error.response?.data?.message || '로그인에 실패했습니다.';
-      Alert.alert('로그인 실패', errorMessage);
+      console.error('로그인 에러:', error);
+      Alert.alert('로그인 실패', '로그인 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
