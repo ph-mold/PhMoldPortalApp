@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
+import CookieManager from '@react-native-cookies/cookies';
+import Config from 'react-native-config';
 
+const WEBVIEW_URL = Config.WEBVIEW_URL || 'phmold.co.kr';
+const DOMAIN_URL = Config.DOMAIN_URL || 'phmold.co.kr';
 interface WebViewScreenProps {
   url: string;
 }
@@ -10,6 +14,17 @@ interface WebViewScreenProps {
 const WebViewScreen: React.FC<WebViewScreenProps> = ({ url }) => {
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    CookieManager.set(WEBVIEW_URL, {
+      name: 'platform',
+      value: 'app',
+      domain: DOMAIN_URL,
+      path: '/',
+      version: '1',
+      expires: '2050-12-31T23:59:59.00+00:00',
+    });
+  }, []);
 
   const handleLoadEnd = () => {
     console.log('웹뷰 로딩 완료');
@@ -37,14 +52,9 @@ const WebViewScreen: React.FC<WebViewScreenProps> = ({ url }) => {
     <>
       <WebView
         source={{ uri: url }}
-        userAgent="app"
         style={{ flex: 1 }}
         sharedCookiesEnabled={true}
         thirdPartyCookiesEnabled={true}
-        injectedJavaScript={`
-          localStorage.setItem('platform', 'app');
-          true;
-        `}
         startInLoadingState={true}
         javaScriptEnabled={true}
         domStorageEnabled={true}
