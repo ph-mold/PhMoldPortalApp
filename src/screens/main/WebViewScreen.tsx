@@ -37,6 +37,7 @@ const WebViewScreen: React.FC<WebViewScreenProps> = ({ url }) => {
     <>
       <WebView
         source={{ uri: url }}
+        userAgent="app"
         style={{ flex: 1 }}
         sharedCookiesEnabled={true}
         thirdPartyCookiesEnabled={true}
